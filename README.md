@@ -1,10 +1,10 @@
 ![title](https://github.com/Volfar/gwatcher/blob/logo/logo/logo.png)
 
-GWatcher will harvest all files on your Google Drive with their permissions in convenient csv format so you would be able easy to check WHO has access to WHAT.
+GWatcher will harvest all files on your Google Drive with their permissions in convenient csv format so you would be able easy to check **WHO** has access to **WHAT**.
 
 ## Prerequisites
 To be able to run this tool you need to do following steps:
-1. Go to APIs Console and make your own project. You will see notification that your project has been created. Click there and you will be moved to your project main dashboard.
+1. Go to [APIs Console](https://console.developers.google.com/iam-admin/projects) and make your own project. You will see notification that your project has been created. Click there and you will be moved to your project main dashboard.
 2. Search for ‘Google Drive API’, select the entry, and click ‘Enable’.
 3. Select ‘Credentials’ from the left menu, click ‘Create Credentials’, select ‘OAuth client ID’.
 4. Now, the product name and consent screen need to be set -> click ‘Configure consent screen’ and follow the instructions. Once finished:
