@@ -22,7 +22,7 @@ The downloaded file has all authentication information. Rename the file to “cl
 ## Usage
 Simply run tool and you will be prompted to enter your Google credentials and requested access to Google Drive
 
-```python gwatcher.py```
+```python3 gwatcher.py```
 
 ## Report Example
 ![alt text](https://github.com/Volfar/gwatcher/blob/logo/logo/screenshot.png)
