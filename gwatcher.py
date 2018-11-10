@@ -34,7 +34,7 @@ def CollectPermissions(file):
     Args: GoogleDrive file (dict)
     Returns: dict with collected information
     """
-    for j in range(5):
+    for j in range(3):
         try:
             if file["mimeType"] == "application/vnd.google-apps.folder":
                 folders.append(file["id"])
@@ -71,10 +71,11 @@ def CollectPermissions(file):
             watch['CreatedDate'] = file["createdDate"]
             watch['ModifiedDate'] = file["modifiedDate"]
             watch['AlternateLink'] = file["alternateLink"]
+            time.sleep(0.1)
             return watch
         except Exception as e:
             print("Error parsing:{0}, {1}".format(file["title"], e))
-            time.sleep(5)
+            time.sleep(1)
 
 
 def GenerateReport():
@@ -108,25 +109,25 @@ if __name__ == '__main__':
     writer = csv.DictWriter(gwatcher, fieldnames=fieldnames)
     writer.writeheader()
     pool = Pool()
-    for i in range(5):
+    for i in range(3):
         try:
             RootDirectory = drive.ListFile(
                 {'q': '"root" in parents'}).GetList()
             break
         except:
-            time.sleep(60)
+            time.sleep(10)
     parent_dir.update({RootDirectory[0]['parents'][0]["id"]: "/"})
     p = pool.map_async(CollectPermissions, RootDirectory)
     for i in (p.get()):
         results.append(i)
         file_count += 1
         print("File:{0}".format(file_count))
-    for i in range(5):
+    for i in range(3):
         try:
             SharedFiles = drive.ListFile({'q': 'sharedWithMe'}).GetList()
             break
         except:
-            time.sleep(60)
+            time.sleep(10)
     p = pool.map_async(CollectPermissions, SharedFiles)
     for i in (p.get()):
         results.append(i)
@@ -134,21 +135,19 @@ if __name__ == '__main__':
         print("File:{0}".format(file_count))
     try:
         while folders:
-            time.sleep(0.5)
             for id in folders:
-                time.sleep(0.5)
-                for i in range(5):
+                time.sleep(0.1)
+                for i in range(3):
                     try:
                         folder = drive.ListFile(
                             {'q': '"{0}" in parents'.format(id)}).GetList()
                         break
                     except:
-                        time.sleep(60)
+                        time.sleep(10)
                 p = pool.map_async(CollectPermissions, folder)
                 for i in p.get():
                     results.append(i)
                     file_count += 1
-                    time.sleep(0.1)
                     print("File:{0}".format(file_count))
                 folders.remove(id)
     except:
