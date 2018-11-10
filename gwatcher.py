@@ -34,49 +34,51 @@ def CollectPermissions(file):
     Args: GoogleDrive file (dict)
     Returns: dict with collected information
     """
-    try:
-        if file["mimeType"] == "application/vnd.google-apps.folder":
-            folders.append(file["id"])
-            if file["parents"]:
-                parent_dir[file["id"]] = "{0}{1}/".format(
-                    parent_dir.get(file["parents"][0]["id"], "/"),
-                    file["title"]
-                )
-            else:
-                parent_dir[file["id"]] = "/{0}/".format(
-                    file["title"]
-                )
-        watch = {}
-        for perm in file.GetPermissions():
-            if perm.get("emailAddress") is not None:
-                emailAddress = perm.get("emailAddress")
-            else:
-                emailAddress = ""
-            if perm.get("type") == "anyone":
-                watch["anyone"] = perm.get("role")
-            elif perm.get("type") == "user":
-                if emailAddress not in fieldnames:
-                    fields.append(emailAddress)
-                    watch[emailAddress] = perm.get("role")
+    for j in range(5):
+        try:
+            if file["mimeType"] == "application/vnd.google-apps.folder":
+                folders.append(file["id"])
+                if file["parents"]:
+                    parent_dir[file["id"]] = "{0}{1}/".format(
+                        parent_dir.get(file["parents"][0]["id"], "/"),
+                        file["title"]
+                    )
                 else:
-                    watch[emailAddress] = perm.get("role")
-        if not file["parents"]:
-            watch['Path'] = "/{0}".format(file["title"])
-        else:
-            watch['Path'] = "{0}{1}".format(parent_dir.get(file["parents"][0]["id"], "/"),
-                                            file["title"])
-        watch['FileType'] = file["mimeType"].split(".")[-1]
-        watch['Owner'] = file["ownerNames"][0]
-        watch['CreatedDate'] = file["createdDate"]
-        watch['ModifiedDate'] = file["modifiedDate"]
-        watch['AlternateLink'] = file["alternateLink"]
-        return watch
-    except:
-        print("Error parsing:{0}".format(file["title"]))
+                    parent_dir[file["id"]] = "/{0}/".format(
+                        file["title"]
+                    )
+            watch = {}
+            for perm in file.GetPermissions():
+                if perm.get("emailAddress") is not None:
+                    emailAddress = perm.get("emailAddress")
+                else:
+                    emailAddress = ""
+                if perm.get("type") == "anyone":
+                    watch["anyone"] = perm.get("role")
+                elif perm.get("type") == "user":
+                    if emailAddress not in fieldnames:
+                        fields.append(emailAddress)
+                        watch[emailAddress] = perm.get("role")
+                    else:
+                        watch[emailAddress] = perm.get("role")
+            if not file["parents"]:
+                watch['Path'] = "/{0}".format(file["title"])
+            else:
+                watch['Path'] = "{0}{1}".format(parent_dir.get(file["parents"][0]["id"], "/"),
+                                                file["title"])
+            watch['FileType'] = file["mimeType"].split(".")[-1]
+            watch['Owner'] = file["ownerNames"][0]
+            watch['CreatedDate'] = file["createdDate"]
+            watch['ModifiedDate'] = file["modifiedDate"]
+            watch['AlternateLink'] = file["alternateLink"]
+            return watch
+        except Exception as e:
+            print("Error parsing:{0}, {1}".format(file["title"], e))
+            time.sleep(5)
 
 
 def GenerateReport():
-    """Moves header to top and deletes tempfile
+    """Moves header to the top and deletes tempfile
     """
     with open("tmp.csv", "r") as file:
         lines = file.readlines()
@@ -88,7 +90,7 @@ def GenerateReport():
         for line in lines:
             file.write(line)
         file.close()
-        os.remove("tmp.csv")
+    os.remove("tmp.csv")
 
 
 if __name__ == '__main__':
@@ -100,6 +102,7 @@ if __name__ == '__main__':
     folders = manager.list()
     parent_dir = manager.dict()
     fields = manager.list()
+    file_count = 0
     fieldnames = ['Path', 'FileType', 'Owner', 'CreatedDate',
                   'ModifiedDate', 'AlternateLink', 'anyone']
     writer = csv.DictWriter(gwatcher, fieldnames=fieldnames)
@@ -107,7 +110,8 @@ if __name__ == '__main__':
     pool = Pool()
     for i in range(5):
         try:
-            RootDirectory = drive.ListFile({'q': '"root" in parents'}).GetList()
+            RootDirectory = drive.ListFile(
+                {'q': '"root" in parents'}).GetList()
             break
         except:
             time.sleep(60)
@@ -115,6 +119,8 @@ if __name__ == '__main__':
     p = pool.map_async(CollectPermissions, RootDirectory)
     for i in (p.get()):
         results.append(i)
+        file_count += 1
+        print("File:{0}".format(file_count))
     for i in range(5):
         try:
             SharedFiles = drive.ListFile({'q': 'sharedWithMe'}).GetList()
@@ -124,6 +130,8 @@ if __name__ == '__main__':
     p = pool.map_async(CollectPermissions, SharedFiles)
     for i in (p.get()):
         results.append(i)
+        file_count += 1
+        print("File:{0}".format(file_count))
     try:
         while folders:
             time.sleep(0.5)
@@ -135,18 +143,14 @@ if __name__ == '__main__':
                             {'q': '"{0}" in parents'.format(id)}).GetList()
                         break
                     except:
-                        time.sleep(60)    
-                for i in range(5):
-                    try:
-                        p = pool.map_async(CollectPermissions, folder)
-                        for i in p.get():
-                            results.append(i)
-                        break
-                    except:
-                        print("Error scannig:{0}".format(id))
-                        time.sleep(1)
+                        time.sleep(60)
+                p = pool.map_async(CollectPermissions, folder)
+                for i in p.get():
+                    results.append(i)
+                    file_count += 1
+                    time.sleep(0.1)
+                    print("File:{0}".format(file_count))
                 folders.remove(id)
-            print("Time:{0}".format((datetime.now()-delta)))
     except:
         print("Error")
     finally:
@@ -156,7 +160,10 @@ if __name__ == '__main__':
         time.sleep(1)
 
         for i in results:
-            writer.writerow(i)
+            try:
+                writer.writerow(i)
+            except AttributeError as e:
+                print(e)
         writer.writeheader()
         gwatcher.close()
         GenerateReport()
