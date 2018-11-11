@@ -19,6 +19,12 @@ The downloaded file has all authentication information. Rename the file to “cl
 
 ```pip install -r requirements.txt```
 
+For best experience I recommend to use virtualenv.
+```virtualenv -p python3 env```
+```source env/bin/activate```
+And then install dependencies as in number 5.
+
+
 ## Usage
 Simply run tool and you will be prompted to enter your Google credentials and requested access to Google Drive
 
