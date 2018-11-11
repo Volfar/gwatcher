@@ -19,10 +19,10 @@ The downloaded file has all authentication information. Rename the file to “cl
 
 ```pip install -r requirements.txt```
 
-For best experience I recommend to use virtualenv.
-```virtualenv -p python3 env```
-```source env/bin/activate```
-And then install dependencies as in number 5.
+For best experience I recommend to use virtualenv.<br />
+```virtualenv -p python3 env```<br />
+```source env/bin/activate```<br />
+And then install dependencies with command in number 5.
 
 
 ## Usage
